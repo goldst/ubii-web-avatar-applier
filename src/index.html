@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>Ubi-Interact Physical Avatar Applier</title>
+</head>
+
+<body>
+    <h1>Ubi-Interact Physical Avatar Applier</h1>
+
+    <style>
+        html,
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .control,
+        .control>*:not(button):not(span) {
+            display: grid;
+            column-gap: 10px;
+            row-gap: 10px;
+        }
+
+        .control {
+            padding: 10px;
+            border: 2px solid black;
+            border-radius: 5px;
+            grid-template-columns: 1fr 1fr;
+            max-width: 750px;
+        }
+
+        .control>*:not(button) {
+            grid-template-columns: 2fr 3fr;
+        }
+
+        button {
+            border: 1px solid black;
+            background-color: lightgray;
+            border-radius: 3px;
+        }
+
+        @media screen and (max-width: 600px) {
+            .control {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+
+    <div class="control">
+        <label>
+            <span>Service URL</span>
+            <input type="text" class="service-url" placeholder="http://localhost:8102/services">
+        </label>
+        <label>
+            <span>Topic data URL</span>
+            <input type="text" class="topic-data-url" placeholder="ws://localhost:8104/topicdata">
+        </label>
+        <label>
+            <span>Current pose topic</span>
+            <input type="text" class="topic-pose" placeholder="/avatar/ik_target">
+        </label>
+        <label>
+            <span>Use ClientId prefix</span>
+            <input type="checkbox" class="device-prefix-pose">
+        </label>
+        <label>
+            <span>Velocities topic</span>
+            <input type="text" class="topic-velocity" placeholder="/avatar/ik_target">
+        </label>
+        <label>
+            <span>Use ClientId prefix</span>
+            <input type="checkbox" class="device-prefix-velocities">
+        </label>
+        <button onClick="start()" class="start">Start</button>
+        <button onClick="stop()">Stop</button>
+    </div>
+
+
+    <h2>Last published full pose</h2>
+    <div class="control log-area-pose"></div>
+
+    <h2>Last received forces</h2>
+    <div class="control log-area-forces"></div>
+
+    <footer style="margin-top: 50px; max-width: 750px; font-style: italic; text-align: center;">
+        This interface demonstrates the use of the <a
+            href="https://www.github.com/goldst/ubii-web-avatar-applier">Ubi-Interact avatar applier for web
+            browsers</a>. The avatar applier can be used to sapply forces to an physical avatar and publish its full
+        pose. This is a necessary step in
+        physical embodiment scenarios, where users are represented virtually through a physical avatar. To use this
+        demo, an installation of <a href="https://github.com/SandroWeber/ubii-node-master">ubii-node-master</a> is
+        required.
+    </footer>
+    <script src="./bundle.js"></script>
+    <script>
+        let applier;
+        const serviceURLInput = document.querySelector('.service-url');
+        const topicDataURLInput = document.querySelector('.topic-data-url');
+        const topicPoseInput = document.querySelector('.topic-pose');
+        const topicVelocityInput = document.querySelector('.topic-velocity');
+        const devicePrefixPoseCheckbox = document.querySelector('.device-prefix-pose');
+        const devicePrefixVelocityCheckbox = document.querySelector('.device-prefix-velocities');
+
+        const buttonStart = document.querySelector('.start');
+
+        const logAreaPose = document.querySelector('.log-area-pose');
+        const logAreaForces = document.querySelector('.log-area-forces');
+
+        const poses = [
+            'Hips', 'LeftUpperLeg', 'RightUpperLeg',
+            'LeftLowerLeg', 'RightLowerLeg',
+            'LeftFoot', 'RightFoot', 'Spine', 'Chest',
+            'Neck', 'Head', 'LeftShoulder',
+            'RightShoulder', 'LeftUpperArm',
+            'RightUpperArm', 'LeftLowerArm',
+            'RightLowerArm', 'LeftHand', 'RightHand',
+            'LeftToes', 'RightToes', 'LeftThumbProximal',
+            'LeftThumbIntermediate', 'LeftThumbDistal',
+            'LeftIndexProximal', 'LeftIndexIntermediate',
+            'LeftIndexDistal', 'LeftMiddleProximal',
+            'LeftMiddleIntermediate', 'LeftMiddleDistal',
+            'LeftRingProximal', 'LeftRingIntermediate',
+            'LeftRingDistal', 'LeftLittleProximal',
+            'LeftLittleIntermediate', 'LeftLittleDistal',
+            'RightThumbProximal', 'RightThumbIntermediate',
+            'RightThumbDistal', 'RightIndexProximal',
+            'RightIndexIntermediate', 'RightIndexDistal',
+            'RightMiddleProximal', 'RightMiddleIntermediate',
+            'RightMiddleDistal', 'RightRingProximal',
+            'RightRingIntermediate', 'RightRingDistal',
+            'RightLittleProximal', 'RightLittleIntermediate',
+            'RightLittleDistal', 'UpperChest'
+        ];
+
+        const poseElements = {}
+        poses.forEach(pose => {
+            logAreaPose.innerHTML +=
+                `<span>${pose}</span>
+                <div class="pose-${pose}">(no value)</div>`;
+        });
+        poses.forEach(pose => {
+            poseElements[pose] = document.querySelector(`.pose-${pose}`);
+        });
+
+        const forceElements = {};
+        poses.forEach(pose => {
+            logAreaForces.innerHTML +=
+                `<span>${pose}</span>
+                <div class="force-${pose}">(no value)</div>`;
+        });
+        poses.forEach(pose => {
+            forceElements[pose] = document.querySelector(`.force-${pose}`);
+        });
+
+        function start() {
+            buttonStart.style.backgroundColor = 'green';
+            
+            applier = new UbiiWebAvatarApplier.Applier({
+                urlServices: serviceURLInput.value || 'http://localhost:8102/services',
+                urlTopicData: topicDataURLInput.value || 'ws://localhost:8104/topicdata',
+                topicCurrentPose: topicPoseInput.value || '/avatar/current_pose/list',
+                topicVelocity: topicVelocityInput.value || '/avatar/target_velocities',
+                useDevicePrefixPose: devicePrefixPoseCheckbox.checked,
+                useDevicePrefixVelocity: devicePrefixVelocityCheckbox.checked,
+                onVelocitiesReceived: logForces,
+                onCurrentPosePublished: logPose
+            });
+        }
+
+        function stop() {
+            buttonStart.style.backgroundColor = 'lightgray';
+
+            applier?.stop();
+        }
+
+        function logPose(pose) {
+            pose.object3DList.elements.forEach(p => {
+                if(poseElements[p.id]) poseElements[p.id].innerHTML = `
+                    <code>pos x</code><code>${p.pose.position.x.toFixed(9)}</code>
+                    <code>pos y</code><code>${p.pose.position.y.toFixed(9)}</code>
+                    <code>pos z</code><code>${p.pose.position.z.toFixed(9)}</code>
+                    <code>quat x</code><code>${p.pose.quaternion.x.toFixed(9)}</code>
+                    <code>quat y</code><code>${p.pose.quaternion.y.toFixed(9)}</code>
+                    <code>quat z</code><code>${p.pose.quaternion.z.toFixed(9)}</code>
+                    <code>quat w</code><code>${p.pose.quaternion.w.toFixed(9)}</code>
+                `;
+            });
+        }
+
+        function logForces(forces) {
+            forces.forEach(p => {
+                forceElements[p.id].innerHTML = `
+                    <code>pos x</code><code>${p.pose.position.x.toFixed(9)}</code>
+                    <code>pos y</code><code>${p.pose.position.y.toFixed(9)}</code>
+                    <code>pos z</code><code>${p.pose.position.z.toFixed(9)}</code>
+                    <code>quat x</code><code>${p.pose.quaternion.x.toFixed(9)}</code>
+                    <code>quat y</code><code>${p.pose.quaternion.y.toFixed(9)}</code>
+                    <code>quat z</code><code>${p.pose.quaternion.z.toFixed(9)}</code>
+                    <code>quat w</code><code>${p.pose.quaternion.w.toFixed(9)}</code>
+                `;
+            });
+        }
+    </script>
+
+</body>
+
+</html>

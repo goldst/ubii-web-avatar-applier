@@ -160,7 +160,7 @@
             buttonStart.style.backgroundColor = 'green';
             
             applier = new UbiiWebAvatarApplier.Applier({
-                urlServices: serviceURLInput.value || 'http://localhost:8102/services',
+                urlServices: serviceURLInput.value || 'http://localhost:8102/services/json',
                 urlTopicData: topicDataURLInput.value || 'ws://localhost:8104/topicdata',
                 topicCurrentPose: topicPoseInput.value || '/avatar/current_pose/list',
                 topicVelocity: topicVelocityInput.value || '/avatar/target_velocities',

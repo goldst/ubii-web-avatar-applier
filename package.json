@@ -1,6 +1,6 @@
 {
   "name": "ubii-web-avatar-applier",
-  "version": "0.0.3",
+  "version": "0.0.7",
   "description": "Receives linear and angular velocities for the physical avatar and publishes current pose",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -8,12 +8,15 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "webpack serve --mode=development",
     "build": "webpack --mode=production",
-    "build:module": "tsc"
+    "build:module": "tsc",
+    "build:module:watch": "tsc --watch",
+    "pages": "rm -r dist docs && npm run build && cp -r dist docs"
   },
   "files": [
     "dist",
     "LICENSE",
-    "README"
+    "README",
+    "index.d.ts"
   ],
   "author": "Leonard Goldstein",
   "license": "MIT",
@@ -27,7 +30,7 @@
     "typescript": "^4.5.5"
   },
   "dependencies": {
-    "@tum-far/ubii-msg-formats": "^0.15.16",
-    "@tum-far/ubii-node-webbrowser": "^0.2.5"
+    "@tum-far/ubii-msg-formats": "^0.16.03",
+    "@tum-far/ubii-node-webbrowser": "^0.2.6"
   }
 }

@@ -1,4 +1,4 @@
-# ubii-web-avatar-applier – Work in progress
+# ubii-web-avatar-applier
 Ubi-Interact linear and angular velocities receiver for physical avatars and current pose publisher. This is a necessary step in physical embodiment scenarios, where users are represented virtually through a physical avatar.
 
 ## Usage
@@ -45,14 +45,6 @@ new Applier(options);
 For available options, see [ApplierOptions.ts](./src/ApplierOptions.ts).
 
 That's it! Other than supplying the options, no further configuration is necessary. If you want to stop the applier, just call `stop()` on the applier object.
-
-## Development status and contributing
-This project is work in progress. Let me know if you have any issues! Currently I'm not taking code contributions, because it is part of an university project. I am planing to open it up in June.
-
-<!-- TODO replace section once bachelors thesis is finished>
-
-Don't expect me to update this project that much once it's done :upside_down_face: but your code and documentation contributions are warmly welcomed. Make sure to create an issue first if you want to work on something and let me know there.
-<-->
 
 ## License
 [MIT](LICENSE)

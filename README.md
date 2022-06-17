@@ -10,7 +10,7 @@ This project communicates with a [Ubi-Interact master node](https://github.com/S
 To apply forces, this module receives linear and angular velocities from another Ubi-Interact component. It also publishes the resulting pose. [ubii-web-ik-force-computation](https://github.com/goldst/ubii-web-ik-force-computation) simplifies the process of publishing targets using abstractions similar to the ones in this module.
 
 ### Online Demo
-The demo in this project is available at https://goldst.dev/ubii-web-avatar-applier/dist/.
+The demo in this project is available at https://goldst.dev/ubii-web-avatar-applier/.
 
 ### Running the demo locally
 After cloning, install, and run the project:
